@@ -26,6 +26,15 @@ class BulletinTest extends TestCase
         $response->assertSee('Nova Aliança');
     }
 
+    public function test_authenticated_user_can_see_bulletins_create_page(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/bulletins/create');
+        $response->assertStatus(200);
+        $response->assertSee('Novo Folder Informativo');
+    }
+
     public function test_public_bulletin_can_be_viewed_without_login(): void
     {
         $bulletin = Bulletin::create([

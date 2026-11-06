@@ -73,11 +73,18 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <button type="button" @click="showBatchModal = true" class="px-3 py-1.5 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        <span>⚡ Importar Links em Lote</span>
+                    </button>
+
                     <button type="button" @click="loadDemoNews()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-.82-7.915A4 4 0 0115.82 8.085 4 4 0 0112 14z" />
                         </svg>
-                        <span>Preencher com Exemplos</span>
+                        <span>Exemplos</span>
                     </button>
                 </div>
             </div>
@@ -288,7 +295,7 @@
                                     <div class="sm:col-span-4">
                                         <div class="w-full h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 relative group flex items-center justify-center">
                                             <template x-if="item.image_url">
-                                                <img :src="item.image_url" @error="handleImgErr(item, $event)" class="w-full h-full object-cover">
+                                                <img :src="item.image_url" x-on:error="handleImgErr(item, $event)" class="w-full h-full object-cover">
                                             </template>
                                             <template x-if="!item.image_url">
                                                 <div class="text-center p-2 text-slate-400 text-[10px]">
@@ -390,7 +397,7 @@
                                     <div class="sm:col-span-4">
                                         <div class="w-full h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 relative group flex items-center justify-center">
                                             <template x-if="item.image_url">
-                                                <img :src="item.image_url" @error="handleImgErr(item, $event)" class="w-full h-full object-cover">
+                                                <img :src="item.image_url" x-on:error="handleImgErr(item, $event)" class="w-full h-full object-cover">
                                             </template>
                                             <template x-if="!item.image_url">
                                                 <div class="text-center p-2 text-slate-400 text-[10px]">
