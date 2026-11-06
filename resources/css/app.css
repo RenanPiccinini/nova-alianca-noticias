@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+[x-cloak] {
+    display: none !important;
+}
+
 @layer utilities {
     .font-condensed {
         font-family: 'Barlow Condensed', 'Oswald', sans-serif;

@@ -79,7 +79,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button type="button" @click="showBatchModal = true" class="px-3 py-1.5 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+                    <button type="button" @click="openBatchModal()" class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-blue-950 text-xs font-black rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                         </svg>
@@ -508,53 +508,77 @@
                 </button>
             </div>
         </div>
-        <!-- MODAL IMPORTAÇÃO EM LOTE -->
-        <div x-show="showBatchModal" x-cloak class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">⚡</span>
-                        <h3 class="text-base font-black text-slate-900">Importar Múltiplos Links</h3>
+    </form>
+
+    <!-- MODAL IMPORTAÇÃO EM LOTE -->
+    <div x-show="showBatchModal" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         @keydown.escape.window="closeBatchModal()"
+         @click.self="closeBatchModal()"
+         class="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200" @click.stop>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">⚡</span>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900">Importar Links em Lote</h3>
+                        <p class="text-[11px] text-slate-500">Cole múltiplos links para preencher os slots automaticamente.</p>
                     </div>
-                    <button type="button" @click="showBatchModal = false" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+                </div>
+                <button type="button" @click="closeBatchModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-base flex items-center justify-center transition">✕</button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Destino das Notícias:</label>
+                    <select x-model="batchTarget" class="w-full text-xs rounded-xl border-slate-300 py-2.5 focus:border-blue-500 focus:ring-blue-500">
+                        <option value="all">Preencher Automaticamente (Todo o Folder em ordem)</option>
+                        <option value="1">Apenas Seção 1 (Cidade & Metropolitana)</option>
+                        <option value="2">Apenas Seção 2 (Goiás & Brasil)</option>
+                    </select>
                 </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Destino das Notícias:</label>
-                        <select x-model="batchTarget" class="w-full text-xs rounded-lg border-slate-300 py-2">
-                            <option value="all">Preencher Automaticamente (Todo o Folder)</option>
-                            <option value="1">Apenas Seção 1 (Cidade & Região)</option>
-                            <option value="2">Apenas Seção 2 (Goiás & Brasil)</option>
-                        </select>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-slate-700">Cole as URLs das matérias (uma por linha):</label>
+                        <button type="button" x-show="batchUrls" @click="batchUrls = ''" class="text-[11px] text-rose-600 hover:underline">Limpar texto</button>
                     </div>
+                    <textarea x-model="batchUrls" rows="6" placeholder="https://g1.globo.com/...&#10;https://uol.com.br/...&#10;https://cnnbrasil.com.br/..." class="w-full text-xs font-mono rounded-xl border-slate-300 p-3 focus:border-blue-500 focus:ring-blue-500 shadow-inner"></textarea>
+                    <p class="text-[11px] text-slate-500 mt-1">O robô vai acessar cada link, baixar e salvar a foto no servidor e extrair manchete, resumo e fonte.</p>
+                </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Cole as URLs das notícias (uma por linha):</label>
-                        <textarea x-model="batchUrls" rows="6" placeholder="https://g1.globo.com/...&#10;https://uol.com.br/...&#10;https://cnnbrasil.com.br/..." class="w-full text-xs font-mono rounded-lg border-slate-300 p-2.5 focus:border-blue-500"></textarea>
-                        <p class="text-[11px] text-slate-500 mt-1">O sistema vai baixar fotos e textos de cada link sequencialmente.</p>
-                    </div>
+                <div x-show="batchProcessing" class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-800 flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span x-text="batchProgress"></span>
+                </div>
 
-                    <div x-show="batchProcessing" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold text-blue-800 flex items-center gap-2">
-                        <svg class="animate-spin h-4 w-4 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                        </svg>
-                        <span x-text="batchProgress"></span>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-2">
-                        <button type="button" @click="showBatchModal = false" :disabled="batchProcessing" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800">
-                            Cancelar
-                        </button>
-                        <button type="button" @click="processBatchUrls()" :disabled="batchProcessing || !batchUrls.trim()" class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-black rounded-xl text-xs shadow-md transition">
-                            <span x-text="batchProcessing ? 'Processando...' : 'Iniciar Importação'"></span>
-                        </button>
-                    </div>
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="closeBatchModal()" :disabled="batchProcessing" class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 rounded-xl transition">
+                        Cancelar
+                    </button>
+                    <button type="button" @click="processBatchUrls()" :disabled="batchProcessing || !batchUrls.trim()" class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-black rounded-xl text-xs shadow-md transition flex items-center gap-2">
+                        <template x-if="batchProcessing">
+                            <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </template>
+                        <span x-text="batchProcessing ? 'Importando notícias...' : '✨ Iniciar Importação em Lote'"></span>
+                    </button>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 </div>
 
 <script>
@@ -577,6 +601,16 @@ function bulletinEditor(config) {
         batchTarget: 'all',
         batchProcessing: false,
         batchProgress: '',
+
+        openBatchModal() {
+            this.showBatchModal = true;
+        },
+
+        closeBatchModal() {
+            if (!this.batchProcessing) {
+                this.showBatchModal = false;
+            }
+        },
 
         getItemsForSection(sectionNumber) {
             return this.items.filter(i => i.section == sectionNumber);
@@ -739,15 +773,16 @@ function bulletinEditor(config) {
                 // Determine target slot
                 let target;
                 if (this.batchTarget === '1') {
-                    target = this.items.filter(i => i.section == 1).find(i => !i.title || i.title.trim() === '');
+                    const s1 = this.items.filter(i => i.section == 1);
+                    target = s1.find(i => !i.title || i.title.trim() === '');
+                    if (!target && s1.length > 0) target = s1[idx % s1.length];
                 } else if (this.batchTarget === '2') {
-                    target = this.items.filter(i => i.section == 2).find(i => !i.title || i.title.trim() === '');
+                    const s2 = this.items.filter(i => i.section == 2);
+                    target = s2.find(i => !i.title || i.title.trim() === '');
+                    if (!target && s2.length > 0) target = s2[idx % s2.length];
                 } else {
                     target = this.items.find(i => !i.title || i.title.trim() === '');
-                }
-
-                if (!target) {
-                    break;
+                    if (!target && this.items.length > 0) target = this.items[idx % this.items.length];
                 }
 
                 try {

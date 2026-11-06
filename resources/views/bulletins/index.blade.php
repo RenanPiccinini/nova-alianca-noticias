@@ -58,8 +58,50 @@
                 </div>
             @endif
 
+            <!-- Modal Feedback WhatsApp Mobile (1-Tap Share) -->
+            <div id="whatsapp-mobile-modal" class="hidden fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-200">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#25D366]"></span>
+                            <h3 class="text-base font-black text-slate-900">Foto do Folder Pronta!</h3>
+                        </div>
+                        <button type="button" onclick="closeWhatsAppMobileModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-sm flex items-center justify-center transition">✕</button>
+                    </div>
+
+                    <div class="w-full h-48 bg-slate-50 rounded-2xl overflow-hidden mb-3 border border-slate-200 shadow-inner flex items-center justify-center">
+                        <img id="whatsapp-mobile-preview" class="w-full h-full object-contain" alt="Folder Nova Aliança">
+                    </div>
+
+                    <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                        Toque no botão verde abaixo para <strong>abrir o WhatsApp e enviar diretamente</strong> a foto:
+                    </p>
+
+                    <!-- Fresh 0ms User Gesture Button: iOS Safari / Android Chrome never expires -->
+                    <button type="button" 
+                            id="whatsapp-mobile-share-btn" 
+                            class="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white font-black rounded-2xl text-sm shadow-md transition flex items-center justify-center gap-2 mb-2.5 cursor-pointer">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/>
+                        </svg>
+                        <span>Enviar Foto no WhatsApp</span>
+                    </button>
+
+                    <!-- Fallback 2: Salvar e abrir -->
+                    <button type="button" 
+                            id="whatsapp-mobile-download-btn" 
+                            class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-1.5 mb-2 cursor-pointer">
+                        <span>⬇️ Salvar Imagem na Galeria</span>
+                    </button>
+
+                    <button type="button" onclick="closeWhatsAppMobileModal()" class="text-xs text-slate-400 hover:text-slate-600 font-semibold py-1">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+
             <!-- Modal Feedback WhatsApp Desktop -->
-            <div id="whatsapp-desktop-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div id="whatsapp-desktop-modal" class="hidden fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
                 <div class="bg-white rounded-2xl max-w-md w-full p-6 text-center shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
                     <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
                         <svg class="w-9 h-9 fill-current" viewBox="0 0 24 24">
@@ -212,16 +254,78 @@
     <div id="hidden-render-sandbox" style="position: fixed; left: -9999px; top: 0; width: 1080px; z-index: -100; pointer-events: none; opacity: 1;"></div>
 
     <script>
+        let currentShareFile = null;
+        let currentShareBlob = null;
+        let currentShareSlug = '';
+        let currentShareDataUrl = '';
+
+        function closeWhatsAppMobileModal() {
+            document.getElementById('whatsapp-mobile-modal').classList.add('hidden');
+        }
+
         function closeWhatsAppModal() {
             document.getElementById('whatsapp-desktop-modal').classList.add('hidden');
         }
+
+        function downloadCurrentFlyer() {
+            if (!currentShareDataUrl) return;
+            const a = document.createElement('a');
+            a.href = currentShareDataUrl;
+            a.download = `folder-nova-alianca-${currentShareSlug || 'noticias'}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Setup 1-tap mobile listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileBtn = document.getElementById('whatsapp-mobile-share-btn');
+            if (mobileBtn) {
+                mobileBtn.addEventListener('click', async () => {
+                    if (!currentShareFile) return;
+
+                    // Fresh 0ms User Gesture! Browser guarantees activation
+                    if (navigator.canShare && navigator.canShare({ files: [currentShareFile] })) {
+                        try {
+                            await navigator.share({
+                                files: [currentShareFile],
+                                title: 'Folder Portal Nova Aliança',
+                            });
+                            closeWhatsAppMobileModal();
+                            return;
+                        } catch (e) {
+                            if (e.name === 'AbortError') return;
+                            console.warn('Share error on tap, falling back to download:', e);
+                        }
+                    }
+
+                    // Fallback
+                    downloadCurrentFlyer();
+                    window.location.href = 'whatsapp://send';
+                    closeWhatsAppMobileModal();
+                });
+            }
+
+            const downloadBtn = document.getElementById('whatsapp-mobile-download-btn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', () => {
+                    downloadCurrentFlyer();
+                    setTimeout(() => {
+                        window.location.href = 'whatsapp://send';
+                        closeWhatsAppMobileModal();
+                    }, 400);
+                });
+            }
+        });
 
         async function shareFolderToWhatsApp(id, renderUrl, slug) {
             const btn = document.getElementById(`btn-whatsapp-${id}`);
             const label = document.getElementById(`label-whatsapp-${id}`);
             const sandbox = document.getElementById('hidden-render-sandbox');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
             btn.disabled = true;
+            const originalText = label.innerText;
             label.innerText = 'Gerando foto do folder...';
 
             try {
@@ -239,8 +343,8 @@
                     throw new Error('Elemento do folder não encontrado.');
                 }
 
-                // 3. Wait a moment for images to load if needed
-                await new Promise(r => setTimeout(r, 400));
+                // 3. Brief wait for fonts / DOM
+                await new Promise(r => setTimeout(r, 250));
 
                 // 4. Render to Canvas via html2canvas (scale 2 = crystal clear high resolution)
                 const canvas = await html2canvas(flyerElement, {
@@ -252,20 +356,45 @@
                     windowWidth: 1200
                 });
 
-                // 5. Convert canvas to Blob
+                // 5. Convert canvas to Blob & File
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
                 const file = new File([blob], `folder-nova-alianca-${slug}.png`, { type: 'image/png' });
+                const dataUrl = canvas.toDataURL('image/png');
 
-                // 6. Check Web Share API with file support (Mobile Chrome/Safari, Android, iOS)
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Folder Portal Nova Aliança',
-                    });
-                    label.innerText = '✓ Foto Compartilhada!';
+                currentShareFile = file;
+                currentShareBlob = blob;
+                currentShareSlug = slug;
+                currentShareDataUrl = dataUrl;
+
+                if (isMobile) {
+                    // Try direct share if browser allows:
+                    let sharedDirectly = false;
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Folder Portal Nova Aliança',
+                            });
+                            sharedDirectly = true;
+                            label.innerText = '✓ Foto Compartilhada!';
+                        } catch (shareErr) {
+                            if (shareErr.name === 'AbortError') {
+                                sharedDirectly = true;
+                            } else {
+                                console.info('Direct share gesture expired, showing 1-tap modal:', shareErr);
+                            }
+                        }
+                    }
+
+                    // If not shared directly, open the 1-tap modal!
+                    if (!sharedDirectly) {
+                        const previewImg = document.getElementById('whatsapp-mobile-preview');
+                        if (previewImg) previewImg.src = dataUrl;
+                        document.getElementById('whatsapp-mobile-modal').classList.remove('hidden');
+                        label.innerText = 'Pronto para Enviar!';
+                    }
                 } else {
                     // Desktop WhatsApp Web Flow:
-                    // A. Copy image directly to Clipboard so user can just Ctrl+V into WhatsApp chat!
                     try {
                         await navigator.clipboard.write([
                             new ClipboardItem({ 'image/png': blob })
@@ -274,29 +403,21 @@
                         console.warn('Clipboard write error', clipErr);
                     }
 
-                    // B. Also trigger download of the file for safety
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = canvas.toDataURL('image/png');
-                    downloadLink.download = `folder-nova-alianca-${slug}.png`;
-                    downloadLink.click();
-
-                    // C. Open WhatsApp Web
+                    downloadCurrentFlyer();
                     window.open('https://web.whatsapp.com/', '_blank');
-
-                    // D. Show clean guided modal
                     document.getElementById('whatsapp-desktop-modal').classList.remove('hidden');
                     label.innerText = 'Foto Copiada!';
                 }
 
                 setTimeout(() => {
-                    label.innerText = 'Compartilhar Foto no WhatsApp';
+                    label.innerText = originalText;
                     btn.disabled = false;
                 }, 3500);
 
             } catch (err) {
                 console.error(err);
                 alert('Erro ao preparar foto para WhatsApp: ' + err.message);
-                label.innerText = 'Compartilhar Foto no WhatsApp';
+                label.innerText = originalText;
                 btn.disabled = false;
             } finally {
                 sandbox.innerHTML = '';
