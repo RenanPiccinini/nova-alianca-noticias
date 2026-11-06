@@ -31,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
     // Metadata Scraper & Image Upload API
     Route::post('/api/scraper/scrape', [MetadataScraperController::class, 'scrape'])->name('scraper.scrape');
     Route::post('/api/scraper/upload-image', [MetadataScraperController::class, 'uploadImage'])->name('scraper.upload-image');
+    Route::get('/img-proxy', [MetadataScraperController::class, 'proxyImage'])->name('image.proxy');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

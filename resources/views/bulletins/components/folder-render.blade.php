@@ -125,7 +125,7 @@
                             <!-- Image -->
                             <div class="w-full h-28 rounded-md overflow-hidden bg-slate-200 relative mb-2 shadow-xs">
                                 @if($item->image_url)
-                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" class="w-full h-full object-cover" crossorigin="anonymous">
+                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" class="w-full h-full object-cover" crossorigin="anonymous" onerror="if(this.src.indexOf('/img-proxy')===-1 && this.src.startsWith('http')){ this.src='/img-proxy?url='+encodeURIComponent(this.src); }">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
                                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,7 +196,7 @@
                             <!-- Image -->
                             <div class="w-full h-28 rounded-md overflow-hidden bg-slate-200 relative mb-2 shadow-xs">
                                 @if($item->image_url)
-                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" class="w-full h-full object-cover" crossorigin="anonymous">
+                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" class="w-full h-full object-cover" crossorigin="anonymous" onerror="if(this.src.indexOf('/img-proxy')===-1 && this.src.startsWith('http')){ this.src='/img-proxy?url='+encodeURIComponent(this.src); }">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
                                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

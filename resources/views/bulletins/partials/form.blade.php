@@ -288,7 +288,7 @@
                                     <div class="sm:col-span-4">
                                         <div class="w-full h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 relative group flex items-center justify-center">
                                             <template x-if="item.image_url">
-                                                <img :src="item.image_url" class="w-full h-full object-cover">
+                                                <img :src="item.image_url" @error="handleImgErr(item, $event)" class="w-full h-full object-cover">
                                             </template>
                                             <template x-if="!item.image_url">
                                                 <div class="text-center p-2 text-slate-400 text-[10px]">
@@ -302,10 +302,11 @@
 
                                         <!-- Upload button or URL -->
                                         <div class="mt-2 flex flex-col gap-1">
-                                            <label class="w-full px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold text-center cursor-pointer transition">
-                                                📁 Enviar Foto
+                                            <label class="w-full px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded text-[11px] font-bold text-center cursor-pointer transition border border-blue-200 flex items-center justify-center gap-1">
+                                                <span x-text="item.uploading ? 'Enviando...' : '📁 Enviar Foto'"></span>
                                                 <input type="file" @change="uploadSlotImage($event, item)" accept="image/*" class="hidden">
                                             </label>
+                                            <input type="text" x-model="item.image_url" placeholder="Ou cole URL da foto..." class="w-full text-[10px] rounded border-slate-200 py-1 px-1.5 text-slate-600 focus:border-blue-500">
                                             <input type="hidden" :name="'items[' + index + '][image_url]'" x-model="item.image_url">
                                         </div>
                                     </div>
@@ -389,7 +390,7 @@
                                     <div class="sm:col-span-4">
                                         <div class="w-full h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 relative group flex items-center justify-center">
                                             <template x-if="item.image_url">
-                                                <img :src="item.image_url" class="w-full h-full object-cover">
+                                                <img :src="item.image_url" @error="handleImgErr(item, $event)" class="w-full h-full object-cover">
                                             </template>
                                             <template x-if="!item.image_url">
                                                 <div class="text-center p-2 text-slate-400 text-[10px]">
@@ -403,10 +404,11 @@
 
                                         <!-- Upload button or URL -->
                                         <div class="mt-2 flex flex-col gap-1">
-                                            <label class="w-full px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold text-center cursor-pointer transition">
-                                                📁 Enviar Foto
+                                            <label class="w-full px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded text-[11px] font-bold text-center cursor-pointer transition border border-blue-200 flex items-center justify-center gap-1">
+                                                <span x-text="item.uploading ? 'Enviando...' : '📁 Enviar Foto'"></span>
                                                 <input type="file" @change="uploadSlotImage($event, item)" accept="image/*" class="hidden">
                                             </label>
+                                            <input type="text" x-model="item.image_url" placeholder="Ou cole URL da foto..." class="w-full text-[10px] rounded border-slate-200 py-1 px-1.5 text-slate-600 focus:border-blue-500">
                                             <input type="hidden" :name="'items[' + index + '][image_url]'" x-model="item.image_url">
                                         </div>
                                     </div>
@@ -585,10 +587,17 @@ function bulletinEditor(config) {
             }
         },
 
+        handleImgErr(item, e) {
+            if (item.image_url && item.image_url.startsWith('http') && !item.image_url.includes('/img-proxy')) {
+                item.image_url = '/img-proxy?url=' + encodeURIComponent(item.image_url);
+            }
+        },
+
         async uploadSlotImage(e, item) {
             const file = e.target.files[0];
             if (!file) return;
 
+            item.uploading = true;
             const formData = new FormData();
             formData.append('image', file);
 
@@ -606,10 +615,12 @@ function bulletinEditor(config) {
                 if (res.success && res.image_url) {
                     item.image_url = res.image_url;
                 } else {
-                    alert('Falha ao enviar imagem.');
+                    alert('Falha ao enviar imagem: ' + (res.message || 'Erro desconhecido'));
                 }
             } catch (err) {
                 alert('Erro ao enviar imagem: ' + err.message);
+            } finally {
+                item.uploading = false;
             }
         },
 
