@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .font-condensed {
+        font-family: 'Barlow Condensed', 'Oswald', sans-serif;
+    }
+    .font-montserrat {
+        font-family: 'Montserrat', sans-serif;
+    }
+    .font-inter {
+        font-family: 'Inter', sans-serif;
+    }
+}
+
+/* Flyer dimensions and print optimizations */
+.flyer-canvas {
+    width: 1080px;
+    min-height: 1080px;
+    background-color: #ffffff;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printable-flyer, #printable-flyer * {
+        visibility: visible;
+    }
+    #printable-flyer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+    }
+}
