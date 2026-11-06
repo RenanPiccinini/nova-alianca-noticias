@@ -25,6 +25,7 @@ Route::middleware(['auth'])->group(function () {
     // Bulletins
     Route::post('/bulletins/seed-demo', [BulletinController::class, 'seedDemo'])->name('bulletins.seed-demo');
     Route::post('/bulletins/{bulletin}/duplicate', [BulletinController::class, 'duplicate'])->name('bulletins.duplicate');
+    Route::get('/bulletins/{bulletin}/render', [BulletinController::class, 'renderOnly'])->name('bulletins.render');
     Route::resource('bulletins', BulletinController::class);
 
     // Metadata Scraper & Image Upload API

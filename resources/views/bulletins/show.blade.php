@@ -17,6 +17,14 @@
 
             <!-- Action Toolbar -->
             <div class="flex flex-wrap items-center gap-2">
+                <!-- Share Photo directly to WhatsApp -->
+                <button type="button" onclick="shareToWhatsAppDirect()" id="btn-share-whatsapp" class="px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba59] text-white font-black rounded-xl text-sm shadow-md transition flex items-center gap-2 transform hover:-translate-y-0.5">
+                    <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/>
+                    </svg>
+                    <span id="btn-share-whatsapp-text">WhatsApp (Foto)</span>
+                </button>
+
                 <!-- Download High-Res PNG -->
                 <button type="button" id="btn-download-image" onclick="exportFlyerImage()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-sm shadow-md transition flex items-center gap-2 transform hover:-translate-y-0.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,6 +126,71 @@
             setZoom('auto');
         });
 
+        async function shareToWhatsAppDirect() {
+            const flyer = document.getElementById('printable-flyer');
+            const btn = document.getElementById('btn-share-whatsapp');
+            const btnText = document.getElementById('btn-share-whatsapp-text');
+            const scaler = document.getElementById('flyer-scaler');
+
+            const oldTransform = scaler.style.transform;
+            scaler.style.transform = 'none';
+
+            btn.disabled = true;
+            btnText.innerText = 'Preparando foto...';
+
+            try {
+                const canvas = await html2canvas(flyer, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    windowWidth: 1200
+                });
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                const file = new File([blob], `folder-nova-alianca-${@json($bulletin->slug)}.png`, { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Folder Portal Nova Aliança',
+                    });
+                    btnText.innerText = '✓ Foto Enviada!';
+                } else {
+                    // Desktop WhatsApp Web fallback
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]);
+                    } catch (clipErr) {
+                        console.warn(clipErr);
+                    }
+
+                    // Auto download photo
+                    const link = document.createElement('a');
+                    link.download = `folder-nova-alianca-${@json($bulletin->slug)}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    window.open('https://web.whatsapp.com/', '_blank');
+                    alert('Foto do folder copiada com sucesso!\n\nNo WhatsApp que abriu, basta colar (Ctrl + V) na conversa para enviar somente a foto!');
+                    btnText.innerText = '✓ Foto Copiada!';
+                }
+
+                setTimeout(() => {
+                    btnText.innerText = 'WhatsApp (Foto)';
+                    btn.disabled = false;
+                }, 3500);
+            } catch (err) {
+                alert('Erro ao preparar imagem: ' + err.message);
+                btnText.innerText = 'WhatsApp (Foto)';
+                btn.disabled = false;
+            } finally {
+                scaler.style.transform = oldTransform;
+            }
+        }
+
         async function exportFlyerImage() {
             const flyer = document.getElementById('printable-flyer');
             const btn = document.getElementById('btn-download-image');
@@ -170,3 +243,4 @@
         }
     </script>
 </x-app-layout>
+

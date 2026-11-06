@@ -690,3 +690,4 @@ function bulletinEditor(config) {
     }
 }
 </script>
+

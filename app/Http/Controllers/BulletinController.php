@@ -129,6 +129,15 @@ class BulletinController extends Controller
     }
 
     /**
+     * Render only the flyer component for on-demand image generation / sharing.
+     */
+    public function renderOnly(Bulletin $bulletin): View
+    {
+        $bulletin->load(['sectionOneItems', 'sectionTwoItems']);
+        return view('bulletins.components.folder-render', compact('bulletin'));
+    }
+
+    /**
      * Public view for sharing the folder link.
      */
     public function publicView(string $slug): View
