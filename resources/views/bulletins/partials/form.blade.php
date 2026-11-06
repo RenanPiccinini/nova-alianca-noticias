@@ -15,6 +15,9 @@
                 'date_text' => $item->date_text,
                 'source_url' => $item->source_url,
                 'badge' => $item->badge,
+                'tempUrl' => '',
+                'scraping' => false,
+                'uploading' => false,
             ];
         })->values()->toArray();
     } else {
@@ -32,6 +35,9 @@
                     'date_text' => now()->format('d/m/Y'),
                     'source_url' => '',
                     'badge' => '',
+                    'tempUrl' => '',
+                    'scraping' => false,
+                    'uploading' => false,
                 ];
             }
         }
@@ -284,9 +290,23 @@
 
                                 <!-- Slot quick link scrape -->
                                 <div class="mb-3 flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
-                                    <input type="url" x-model="item.tempUrl" placeholder="Colar link direto nesta matéria..." class="flex-1 text-xs rounded-md border-slate-300 py-1.5 focus:border-blue-500 focus:ring-0">
-                                    <button type="button" @click="scrapeSlotUrl(item)" :disabled="item.scraping" class="px-2.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-md text-xs font-bold transition flex items-center gap-1 shrink-0 disabled:opacity-50">
-                                        <span x-text="item.scraping ? '...' : 'Puxar'"></span>
+                                    <input type="url" 
+                                           x-model="item.tempUrl" 
+                                           @keydown.enter.prevent="scrapeSlotUrl(item)"
+                                           placeholder="Colar link direto nesta matéria..." 
+                                           class="flex-1 text-xs rounded-md border-slate-300 py-1.5 focus:border-blue-500 focus:ring-0">
+                                    <button type="button" 
+                                            @click="scrapeSlotUrl(item)" 
+                                            :disabled="!item.tempUrl || item.tempUrl.trim() === '' || item.scraping" 
+                                            :class="(!item.tempUrl || item.tempUrl.trim() === '' || item.scraping) ? 'opacity-40 cursor-not-allowed bg-slate-400' : 'bg-blue-700 hover:bg-blue-800 cursor-pointer shadow-xs active:scale-95'"
+                                            class="px-3 py-1.5 text-white rounded-md text-xs font-bold transition flex items-center gap-1.5 shrink-0">
+                                        <template x-if="item.scraping">
+                                            <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                            </svg>
+                                        </template>
+                                        <span x-text="item.scraping ? 'Puxando...' : 'Puxar'"></span>
                                     </button>
                                 </div>
 
@@ -386,9 +406,23 @@
 
                                 <!-- Slot quick link scrape -->
                                 <div class="mb-3 flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
-                                    <input type="url" x-model="item.tempUrl" placeholder="Colar link direto nesta matéria..." class="flex-1 text-xs rounded-md border-slate-300 py-1.5 focus:border-teal-500 focus:ring-0">
-                                    <button type="button" @click="scrapeSlotUrl(item)" :disabled="item.scraping" class="px-2.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-md text-xs font-bold transition flex items-center gap-1 shrink-0 disabled:opacity-50">
-                                        <span x-text="item.scraping ? '...' : 'Puxar'"></span>
+                                    <input type="url" 
+                                           x-model="item.tempUrl" 
+                                           @keydown.enter.prevent="scrapeSlotUrl(item)"
+                                           placeholder="Colar link direto nesta matéria..." 
+                                           class="flex-1 text-xs rounded-md border-slate-300 py-1.5 focus:border-teal-500 focus:ring-0">
+                                    <button type="button" 
+                                            @click="scrapeSlotUrl(item)" 
+                                            :disabled="!item.tempUrl || item.tempUrl.trim() === '' || item.scraping" 
+                                            :class="(!item.tempUrl || item.tempUrl.trim() === '' || item.scraping) ? 'opacity-40 cursor-not-allowed bg-slate-400' : 'bg-teal-700 hover:bg-teal-800 cursor-pointer shadow-xs active:scale-95'"
+                                            class="px-3 py-1.5 text-white rounded-md text-xs font-bold transition flex items-center gap-1.5 shrink-0">
+                                        <template x-if="item.scraping">
+                                            <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                            </svg>
+                                        </template>
+                                        <span x-text="item.scraping ? 'Puxando...' : 'Puxar'"></span>
                                     </button>
                                 </div>
 
@@ -474,19 +508,75 @@
                 </button>
             </div>
         </div>
+        <!-- MODAL IMPORTAÇÃO EM LOTE -->
+        <div x-show="showBatchModal" x-cloak class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">⚡</span>
+                        <h3 class="text-base font-black text-slate-900">Importar Múltiplos Links</h3>
+                    </div>
+                    <button type="button" @click="showBatchModal = false" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Destino das Notícias:</label>
+                        <select x-model="batchTarget" class="w-full text-xs rounded-lg border-slate-300 py-2">
+                            <option value="all">Preencher Automaticamente (Todo o Folder)</option>
+                            <option value="1">Apenas Seção 1 (Cidade & Região)</option>
+                            <option value="2">Apenas Seção 2 (Goiás & Brasil)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Cole as URLs das notícias (uma por linha):</label>
+                        <textarea x-model="batchUrls" rows="6" placeholder="https://g1.globo.com/...&#10;https://uol.com.br/...&#10;https://cnnbrasil.com.br/..." class="w-full text-xs font-mono rounded-lg border-slate-300 p-2.5 focus:border-blue-500"></textarea>
+                        <p class="text-[11px] text-slate-500 mt-1">O sistema vai baixar fotos e textos de cada link sequencialmente.</p>
+                    </div>
+
+                    <div x-show="batchProcessing" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold text-blue-800 flex items-center gap-2">
+                        <svg class="animate-spin h-4 w-4 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span x-text="batchProgress"></span>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" @click="showBatchModal = false" :disabled="batchProcessing" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800">
+                            Cancelar
+                        </button>
+                        <button type="button" @click="processBatchUrls()" :disabled="batchProcessing || !batchUrls.trim()" class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-black rounded-xl text-xs shadow-md transition">
+                            <span x-text="batchProcessing ? 'Processando...' : 'Iniciar Importação'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
 </div>
 
 <script>
 function bulletinEditor(config) {
     return {
-        items: config.initialItems || [],
+        items: (config.initialItems || []).map(i => ({
+            ...i,
+            tempUrl: i.tempUrl || '',
+            scraping: false,
+            uploading: false,
+        })),
         editionDate: config.editionDate,
         quickSection: '1',
         quickUrl: '',
         scraping: false,
         scrapeMessage: '',
         scrapeSuccess: true,
+        showBatchModal: false,
+        batchUrls: '',
+        batchTarget: 'all',
+        batchProcessing: false,
+        batchProgress: '',
 
         getItemsForSection(sectionNumber) {
             return this.items.filter(i => i.section == sectionNumber);
@@ -558,8 +648,9 @@ function bulletinEditor(config) {
         },
 
         async scrapeSlotUrl(item) {
-            if (!item.tempUrl) {
-                alert('Informe a URL da notícia para este slot.');
+            const rawUrl = (item.tempUrl || '').trim();
+            if (!rawUrl) {
+                alert('Por favor, informe a URL da notícia para este slot.');
                 return;
             }
 
@@ -572,7 +663,7 @@ function bulletinEditor(config) {
                         'X-CSRF-TOKEN': config.csrfToken,
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ url: item.tempUrl })
+                    body: JSON.stringify({ url: rawUrl })
                 });
 
                 const res = await response.json();
@@ -629,6 +720,66 @@ function bulletinEditor(config) {
             } finally {
                 item.uploading = false;
             }
+        },
+
+        async processBatchUrls() {
+            const lines = (this.batchUrls || '').split('\n').map(l => l.trim()).filter(l => l.length > 5);
+            if (lines.length === 0) {
+                alert('Cole pelo menos um link de notícia válido.');
+                return;
+            }
+
+            this.batchProcessing = true;
+            let successCount = 0;
+
+            for (let idx = 0; idx < lines.length; idx++) {
+                const u = lines[idx];
+                this.batchProgress = `Puxando matéria ${idx + 1} de ${lines.length}...`;
+
+                // Determine target slot
+                let target;
+                if (this.batchTarget === '1') {
+                    target = this.items.filter(i => i.section == 1).find(i => !i.title || i.title.trim() === '');
+                } else if (this.batchTarget === '2') {
+                    target = this.items.filter(i => i.section == 2).find(i => !i.title || i.title.trim() === '');
+                } else {
+                    target = this.items.find(i => !i.title || i.title.trim() === '');
+                }
+
+                if (!target) {
+                    break;
+                }
+
+                try {
+                    const response = await fetch(config.scrapeUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': config.csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ url: u })
+                    });
+
+                    const res = await response.json();
+                    if (res.success && res.data) {
+                        target.title = res.data.title || '';
+                        target.description = res.data.description || '';
+                        target.image_url = res.data.image_url || '';
+                        target.source = res.data.source || 'Fonte: Redação';
+                        target.date_text = res.data.date_text || '';
+                        target.source_url = res.data.url || '';
+                        successCount++;
+                    }
+                } catch (err) {
+                    console.warn('Batch item error:', err);
+                }
+            }
+
+            this.batchProcessing = false;
+            this.showBatchModal = false;
+            this.batchUrls = '';
+            alert(`✓ ${successCount} matéria(s) importada(s) com sucesso com fotos e textos!`);
         },
 
         clearItem(item) {
